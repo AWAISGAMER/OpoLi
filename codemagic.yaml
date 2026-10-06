@@ -22,8 +22,15 @@ workflows:
             fi
           fi
 
-          # Force recreate modern Android v2 files over legacy structure
+          # Force recreate modern Android v2 files
           flutter create --platforms=android .
+
+          # Upgrade compileSdkVersion & targetSdkVersion to 34
+          BUILD_GRADLE="android/app/build.gradle"
+          if [ -f "$BUILD_GRADLE" ]; then
+            sed -i 's/compileSdkVersion.*/compileSdkVersion 34/' "$BUILD_GRADLE"
+            sed -i 's/targetSdkVersion.*/targetSdkVersion 34/' "$BUILD_GRADLE"
+          fi
       - name: Get Flutter packages
         script: | 
           flutter pub get
