@@ -13,18 +13,20 @@ workflows:
           7z x *.7z || true
           unzip -o *.zip || true
           
-          # Find directory containing android folder or pubspec.yaml
+          # Find directory containing pubspec.yaml
           PUBSPEC_PATH=$(find . -name "pubspec.yaml" -not -path "*/.*" | head -n 1)
           if [ -n "$PUBSPEC_PATH" ]; then
             FLUTTER_DIR=$(dirname "$PUBSPEC_PATH")
             echo "Found Flutter app at: $FLUTTER_DIR"
             if [ "$FLUTTER_DIR" != "." ]; then
+              shopt -s dotglob
               cp -r "$FLUTTER_DIR"/* .
             fi
           fi
           
-          # Verify structure
-          ls -la
+          # Force check AndroidManifest location
+          MANIFEST_PATH=$(find . -name "AndroidManifest.xml" | head -n 1)
+          echo "Manifest found at: $MANIFEST_PATH"
       - name: Get Flutter packages
         script: | 
           flutter packages pub get
