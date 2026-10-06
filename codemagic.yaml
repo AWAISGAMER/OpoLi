@@ -4,10 +4,10 @@ workflows:
     max_build_duration: 60
     instance_type: mac_mini_m1
     environment:
-      flutter: 3.0.0
-      java: 11
+      flutter: stable
+      java: 17
     scripts:
-      - name: Extract Project Files
+      - name: Extract Project Files & Upgrade Embedding
         script: | 
           sudo apt-get install -y p7zip-full
           7z x *.7z || true
@@ -21,6 +21,19 @@ workflows:
               cp -r "$FLUTTER_DIR"/* .
             fi
           fi
+
+          # Fix Android Manifest v1 to v2 embedding
+          MANIFEST_FILE="android/app/src/main/AndroidManifest.xml"
+          if [ -f "$MANIFEST_FILE" ]; then
+            if ! grep -q "flutterEmbedding" "$MANIFEST_FILE"; then
+              sed -i '/<application/a \        <meta-data android:name="flutterEmbedding" android:value="2" />' "$MANIFEST_FILE"
+            fi
+          fi
+
+          # Force Android MainActivity fix for v2 embedding
+          find android/ -name "MainActivity.kt" -o -name "MainActivity.java" | while read -r file; do
+            sed -i 's/import io.flutter.app.FlutterActivity;/import io.flutter.embedding.android.FlutterActivity;/' "$file"
+          done
       - name: Get Flutter packages
         script: | 
           flutter pub get
