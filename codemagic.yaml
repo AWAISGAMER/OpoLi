@@ -22,15 +22,22 @@ workflows:
             fi
           fi
 
-          # Force recreate modern Android v2 files
+          # Force recreate modern Android v2 structure
           flutter create --platforms=android .
 
-          # Upgrade compileSdkVersion & targetSdkVersion to 34
-          BUILD_GRADLE="android/app/build.gradle"
-          if [ -f "$BUILD_GRADLE" ]; then
-            sed -i 's/compileSdkVersion.*/compileSdkVersion 34/' "$BUILD_GRADLE"
-            sed -i 's/targetSdkVersion.*/targetSdkVersion 34/' "$BUILD_GRADLE"
-          fi
+          # Global override for compileSdkVersion across all sub-plugins
+          cat << 'EOF' >> android/build.gradle
+
+          subprojects {
+              afterEvaluate { project ->
+                  if (project.hasProperty('android')) {
+                      project.android {
+                          compileSdkVersion 34
+                      }
+                  }
+              }
+          }
+          EOF
       - name: Get Flutter packages
         script: | 
           flutter pub get
