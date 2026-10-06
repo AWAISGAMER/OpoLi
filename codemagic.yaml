@@ -13,9 +13,11 @@ workflows:
           7z x *.7z || true
           unzip -o *.zip || true
           
+          # Find directory containing pubspec.yaml
           PUBSPEC_PATH=$(find . -name "pubspec.yaml" -not -path "*/.*" | head -n 1)
           if [ -n "$PUBSPEC_PATH" ]; then
             FLUTTER_DIR=$(dirname "$PUBSPEC_PATH")
+            echo "Found Flutter app at: $FLUTTER_DIR"
             if [ "$FLUTTER_DIR" != "." ]; then
               shopt -s dotglob
               cp -r "$FLUTTER_DIR"/* .
