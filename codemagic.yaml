@@ -4,7 +4,7 @@ workflows:
     max_build_duration: 60
     instance_type: mac_mini_m1
     environment:
-      flutter: 3.27.0
+      flutter: 3.27.6
       java: 17
     scripts:
       - name: Extract Project Files
@@ -13,11 +13,9 @@ workflows:
           7z x *.7z || true
           unzip -o *.zip || true
           
-          # Find directory containing pubspec.yaml
           PUBSPEC_PATH=$(find . -name "pubspec.yaml" -not -path "*/.*" | head -n 1)
           if [ -n "$PUBSPEC_PATH" ]; then
             FLUTTER_DIR=$(dirname "$PUBSPEC_PATH")
-            echo "Found Flutter app at: $FLUTTER_DIR"
             if [ "$FLUTTER_DIR" != "." ]; then
               shopt -s dotglob
               cp -r "$FLUTTER_DIR"/* .
