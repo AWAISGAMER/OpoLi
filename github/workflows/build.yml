@@ -1,0 +1,61 @@
+name: Build Flutter Release APK
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    # Step 1: GitHub Repository Check out
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+
+    # Step 2: Extract Zip File
+    - name: Extract Project Files
+      run: |
+        echo "=== Extracting ZIP files ==="
+        unzip -o *.zip || true
+        find . -name "*.zip" -exec unzip -o {} \; || true
+
+        # Auto-find pubspec.yaml location and move content to root
+        PUBSPEC_PATH=$(find . -name "pubspec.yaml" -not -path "*/.*" | head -n 1)
+        if [ -n "$PUBSPEC_PATH" ]; then
+          FLUTTER_DIR=$(dirname "$PUBSPEC_PATH")
+          echo "Found pubspec.yaml in: $FLUTTER_DIR"
+          if [ "$FLUTTER_DIR" != "." ]; then
+            cp -r $FLUTTER_DIR/* .
+          fi
+        else
+          echo "Error: pubspec.yaml file not found!"
+          exit 1
+        fi
+
+    # Step 3: Setup Java
+    - name: Setup Java 17
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '17'
+
+    # Step 4: Setup Flutter
+    - name: Setup Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        channel: 'stable'
+
+    # Step 5: Install Dependencies & Build APK
+    - name: Install Dependencies and Build APK
+      run: |
+        flutter pub get
+        flutter build apk --release --no-tree-shake-icons
+
+    # Step 6: Upload Generated APK
+    - name: Upload APK Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: OpoLive-Release-APK
+        path: build/app/outputs/flutter-apk/app-release.apk
